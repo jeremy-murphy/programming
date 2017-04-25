@@ -27,7 +27,6 @@ TEST(identity, const_lvalue)
 TEST(identity, rvalue)
 {
     int x = 1;
-    auto y = id(int(x));
+    auto const &y = id(std::move(x));
     ASSERT_EQ(x, y);
-    EXPECT_NE(&x, &y);
 }
