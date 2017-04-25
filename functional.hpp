@@ -9,7 +9,7 @@ namespace jwm
 struct identity
 {
     template <typename T>
-    auto operator()(T &&x) const -> decltype(auto) 
+    T &&operator()(T &&x) const
     {
         return std::forward<T>(x);
     }
