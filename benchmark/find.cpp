@@ -9,7 +9,6 @@
 
 using namespace std;
 
-#if 1
 static void BM_find_unguarded(benchmark::State &s)
 {
     vector<int> v(s.range(0));
@@ -35,7 +34,6 @@ static void BM_find(benchmark::State &s)
 
 BENCHMARK(BM_find_unguarded)->Range(8, 8<<20);
 BENCHMARK(BM_find)->Range(8, 8<<20);
-#else
 
 static void BM_find_if_unguarded_bind(benchmark::State &s)
 {
@@ -64,20 +62,8 @@ static void BM_find_if_unguarded_lambda(benchmark::State &s)
     }
 }
 
-static void BM_find_if(benchmark::State &s)
-{
-    vector<int> v(s.range(0));
-    iota(begin(v), end(v), 0);
-    
-    while (s.KeepRunning())
-    {
-        benchmark::DoNotOptimize(find(begin(v), end(v), s.range(0) - 1));
-    }
-}
 
 BENCHMARK(BM_find_if_unguarded_bind)->Range(8, 8<<20);
 BENCHMARK(BM_find_if_unguarded_lambda)->Range(8, 8<<20);
-// BENCHMARK(BM_find_if)->Range(8, 8<<20);
-#endif
 
 BENCHMARK_MAIN();
