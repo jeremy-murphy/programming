@@ -16,6 +16,7 @@
 #include <functional>
 #include <iterator>
 #include <numeric>
+#include <tuple>
 
 namespace jwm
 {
@@ -71,6 +72,44 @@ namespace jwm
     }
 
     
+    template <typename I, typename J, typename T, typename CommutativeBinaryOperator, typename AssociativeBinaryOperator>
+    std::tuple<T, T, T> threeway_inner_product(I f0, I l0, J f1, T a, T b, T c, CommutativeBinaryOperator op1, AssociativeBinaryOperator op2)
+    {
+        for (; f0 != l0; ++f0, ++f1)
+        {
+            a = op1(a, op2(*f0, *f1));
+            b = op1(b, op2(*f0, *f0));
+            c = op1(c, op2(*f1, *f1));
+        }
+        return std::make_tuple(a, b, c);
+    }
+
+    
+    template <typename I, typename J, typename T>
+    std::tuple<T, T, T> threeway_inner_product(I f0, I l0, J f1, T a, T b, T c)
+    {
+        return threeway_inner_product(f0, l0, f1, a, b, c, std::plus<>(), std::multiplies<>());
+    }
+    
+    
+    template <typename I, typename J, typename T>
+    auto Pearson_correlation_coefficient_c(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using namespace std;
+        auto const n = distance(x1, xn);
+        
+        auto fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+             fxn = fx1 + n;
+        auto fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+        
+        T x_ss, y_ss, numer;
+        std::tie(numer, x_ss, y_ss) = threeway_inner_product(fx1, fxn, fy1, T(0), T(0), T(0));
+        auto const denom = sqrt(x_ss * y_ss);
+        return numer / denom;
+    }
+    
+    
     template <typename I, typename J>
     auto Pearson_correlation_coefficient(I x1, I xn, J y1)
     {
@@ -86,7 +125,7 @@ namespace jwm
         }; // or Boost accumulator
         auto const mean_x = f(x1, xn), 
                    mean_y = f(y1, y1 + n);
-        return Pearson_correlation_coefficient_b(x1, xn, y1, mean_x, mean_y);
+        return Pearson_correlation_coefficient_c(x1, xn, y1, mean_x, mean_y);
     }    
 }
 
