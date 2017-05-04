@@ -41,8 +41,8 @@ namespace jwm
         using namespace std;
         auto const yn = y1 + distance(x1, xn);
         
-        transform(x1, xn, x1, bind2nd(minus<>(), mean_x));
-        transform(y1, yn, y1, bind2nd(minus<>(), mean_y));
+        transform(x1, xn, x1, std::bind2nd(minus<>(), mean_x));
+        transform(y1, yn, y1, std::bind2nd(minus<>(), mean_y));
         
         auto const numer = inner_product_nonempty(x1, xn, y1);
         auto const x_ss = inner_product_nonempty(x1, xn, x1),
@@ -59,9 +59,9 @@ namespace jwm
         using namespace std;
         auto const n = distance(x1, xn);
         
-        auto fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+        auto fx1 = boost::make_transform_iterator(x1, std::bind2nd(minus<>(), mean_x)),
              fxn = fx1 + n;
-        auto fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y)),
+        auto fy1 = boost::make_transform_iterator(y1, std::bind2nd(minus<>(), mean_y)),
              fyn = fy1 + n;
 
         auto const numer = inner_product_nonempty(fx1, fxn, fy1);
