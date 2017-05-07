@@ -11,6 +11,7 @@
 #include <boost/iterator/transform_iterator.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <functional>
@@ -143,24 +144,28 @@ namespace jwm
     }
     
     
-    template <typename T>
-    struct tuple_plus
+    // Vector addition, in the mathematical sense.
+    struct vector_plus
     {
-        std::tuple<T, T, T> operator()(std::tuple<T, T, T> const &x, std::tuple<T, T, T> const &y) const
+        template <typename Vector>
+        Vector operator()(Vector const &x, Vector const &y) const
         {
             using namespace std;
-            return make_tuple(get<0>(x) + get<0>(y), get<1>(x) + get<1>(y), get<2>(x) + get<2>(y));
+            Vector result;
+            transform(begin(x), end(x), begin(y), begin(result), plus<>());
+            return result;
         }
     };
     
     
+    // (x, y) -> (x*x, x*y, y*y)
     template <typename T>
     struct three_way_product
     {
-        std::tuple<T, T, T> operator()(T &&x, T &&y) const
+        std::array<T, 3> operator()(T &&x, T &&y) const
         {
             using namespace std;
-            return make_tuple(forward<T>(x) * forward<T>(x), forward<T>(x) * forward<T>(y), forward<T>(y) * forward<T>(y));
+            return {{forward<T>(x) * forward<T>(x), forward<T>(x) * forward<T>(y), forward<T>(y) * forward<T>(y)}};
         }
     };
     
@@ -170,16 +175,14 @@ namespace jwm
     {
         assert(x1 != xn);
         using namespace std;
-        auto const n = distance(x1, xn);
-        
-        auto fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
-        fxn = fx1 + n;
-        auto fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
-        
-        T numer, x_ss, y_ss;
-        std::tie(numer, x_ss, y_ss) = std::inner_product(fx1, fxn, fy1, std::make_tuple(T{0}, T{0}, T{0}), tuple_plus<T>(), three_way_product<T>());
-        auto const denom = sqrt(x_ss * y_ss);
-        return numer / denom;
+        auto const n = distance(x1, xn);        
+        auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+                   fxn = fx1 + n;
+        auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+
+        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, vector_plus(), three_way_product<T>());
+        auto const denom = sqrt(three_way[1] * three_way[2]);
+        return three_way[0] / denom;
     }
     
     
