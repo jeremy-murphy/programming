@@ -150,6 +150,7 @@ namespace jwm
         template <typename Vector>
         Vector operator()(Vector const &x, Vector const &y) const
         {
+            assert(x.size() <= y.size());
             using namespace std;
             Vector result;
             transform(begin(x), end(x), begin(y), begin(result), plus<>());
