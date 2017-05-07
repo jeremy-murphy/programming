@@ -162,10 +162,9 @@ namespace jwm
     template <typename T>
     struct three_way_product
     {
-        std::array<T, 3> operator()(T &&x, T &&y) const
+        std::array<T, 3> operator()(T x, T y) const
         {
-            using namespace std;
-            return {{forward<T>(x) * forward<T>(x), forward<T>(x) * forward<T>(y), forward<T>(y) * forward<T>(y)}};
+            return {{x * x, x * y, y * y}};
         }
     };
     
