@@ -181,8 +181,8 @@ namespace jwm
         auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
 
         auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, vector_plus(), three_way_product<T>());
-        auto const denom = sqrt(three_way[1] * three_way[2]);
-        return three_way[0] / denom;
+        auto const denom = sqrt(three_way[0] * three_way[2]);
+        return three_way[1] / denom;
     }
     
     
