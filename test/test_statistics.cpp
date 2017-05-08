@@ -2,17 +2,26 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
+
 using namespace jwm;
 using namespace std;
 
-/*
-TEST(Pearson_correlation_coefficient, singleton)
-{
-    std::vector<double> x(1), y(x);
-    double r = Pearson_correlation_coefficient_a(begin(x), end(x), begin(y));
-}
-*/
 
+TEST(Pearson_correlation_coefficient, NaN)
+{
+    std::vector<double> x(1), y(x); // zero
+    double r = Pearson_correlation_coefficient(begin(x), end(x), begin(y));
+    ASSERT_TRUE(std::isnan(r));
+    x[0] = y[0] = 1.0;
+    r = Pearson_correlation_coefficient(begin(x), end(x), begin(y));
+    ASSERT_TRUE(std::isnan(r));
+    x[0] = y[0] = -1.0;
+    r = Pearson_correlation_coefficient(begin(x), end(x), begin(y));
+    ASSERT_TRUE(std::isnan(r));
+}
+
+/*
 TEST(Pearson_correlation_coefficient, MathWorksEx1)
 {
     vector<double> x = {7, 33/7, 3, 5, 2},
@@ -21,12 +30,12 @@ TEST(Pearson_correlation_coefficient, MathWorksEx1)
     auto r = Pearson_correlation_coefficient(begin(x), end(x), begin(y));
     ASSERT_FLOAT_EQ(0.4514558056, r);
 }
-
+*/
 
 TEST(Pearson_correlation_coefficient, StatisticsHowTo)
 {
-    vector<double> x = {43, 21, 25, 42, 57, 59},
-                   y = {99, 65, 79, 75, 87, 81};
+    vector<double> const x = {43, 21, 25, 42, 57, 59},
+                         y = {99, 65, 79, 75, 87, 81};
     
     auto r = Pearson_correlation_coefficient(begin(x), end(x), begin(y));
     ASSERT_FLOAT_EQ(0.529809, r);
