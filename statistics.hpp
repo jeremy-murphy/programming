@@ -145,24 +145,29 @@ namespace jwm
     
     
     // Vector addition, in the mathematical sense.
-    struct vector_plus
+    template <typename BinaryOperator>
+    struct vector_accumulation
     {
-        template <typename Vector>
-        Vector operator()(Vector const &x, Vector const &y) const
+        BinaryOperator op;
+        
+        vector_accumulation(BinaryOperator op) : op{op} {}
+        
+        template <typename U, typename V>
+        auto operator()(U &&x, V &&y) const
         {
             assert(x.size() <= y.size());
             using namespace std;
-            Vector result;
-            transform(begin(x), end(x), begin(y), begin(result), plus<>());
+            typename remove_reference<typename remove_cv<U>::type>::type result;
+            transform(begin(forward<U>(x)), end(forward<U>(x)), begin(forward<V>(y)), begin(result), op);
             return result;
         }
     };
     
     
     // (x, y) -> (x*x, x*y, y*y)
-    template <typename T>
     struct three_way_product
     {
+        template <typename T>
         std::array<T, 3> operator()(T x, T y) const
         {
             return {{x * x, x * y, y * y}};
@@ -180,12 +185,66 @@ namespace jwm
                    fxn = fx1 + n;
         auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
 
-        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, vector_plus(), three_way_product<T>());
+        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, vector_accumulation<std::plus<>>(std::plus<>()), three_way_product());
         auto const denom = sqrt(three_way[0] * three_way[2]);
         return three_way[1] / denom;
     }
     
     
+    struct x_of_y
+    {
+        template <typename Functor, typename U>
+        auto operator()(Functor &&x, U &&y) const
+        {
+            x(std::forward<U>(y));
+            return x;
+        }
+    };
+    
+    
+    template <typename I, typename J, typename T>
+    auto Pearson_correlation_coefficient_e(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using namespace std;
+        auto const n = distance(x1, xn);        
+        auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+        fxn = fx1 + n;
+        auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+        
+        using namespace boost::accumulators;
+        using kahan_accumulator = accumulator_set<T, stats<tag::sum_kahan>>;
+        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<kahan_accumulator, 3>{}, vector_accumulation<x_of_y>(x_of_y()), three_way_product());
+        auto const denom = sqrt(sum_kahan(three_way[0]) * sum_kahan(three_way[2]));
+        return sum_kahan(three_way[1]) / denom;
+    }
+    
+    
+    template <typename I, typename J, typename T>
+    auto Pearson_correlation_coefficient_f(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using namespace std;
+        auto const n = distance(x1, xn);        
+        auto fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+             fxn = fx1 + n;
+        auto fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+        
+        using namespace boost::accumulators;
+        using kahan_accumulator = accumulator_set<T, stats<tag::sum_kahan>>;
+        std::array<kahan_accumulator, 3> three_way;
+        three_way_product op2;
+        for (; fx1 != fxn; fx1++, fy1++)
+        {
+            auto const tmp = op2(*fx1, *fy1);
+            for (int i = 0; i != three_way.size(); i++)
+                three_way[i](tmp[i]);
+        }
+        auto const denom = sqrt(sum_kahan(three_way[0]) * sum_kahan(three_way[2]));
+        return sum_kahan(three_way[1]) / denom;
+    }
+    
+
     template <typename I, typename J>
     auto Pearson_correlation_coefficient(I x1, I xn, J y1)
     {
@@ -201,7 +260,7 @@ namespace jwm
         }; // or Boost accumulator
         auto const mean_x = f(x1, xn), 
                    mean_y = f(y1, y1 + n);
-        return Pearson_correlation_coefficient_d(x1, xn, y1, mean_x, mean_y);
+        return Pearson_correlation_coefficient_f(x1, xn, y1, mean_x, mean_y);
     }    
 }
 
