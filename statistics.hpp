@@ -202,6 +202,7 @@ namespace jwm
     };
     
     
+    // This variation is 100% slower than d.
     template <typename I, typename J, typename T>
     auto Pearson_correlation_coefficient_e(I x1, I xn, J y1, T mean_x, T mean_y)
     {
@@ -220,6 +221,7 @@ namespace jwm
     }
     
     
+    // This variation is only 50% slower than d.
     template <typename I, typename J, typename T>
     auto Pearson_correlation_coefficient_f(I x1, I xn, J y1, T mean_x, T mean_y)
     {
