@@ -221,6 +221,15 @@ namespace jwm
     }
     
     
+    template <typename I, typename J, typename F>
+    F for_each(I first0, I last0, J first1, F &&f)
+    {
+        for ( ; first0 != last0; ++first0, ++first1)
+            f(*first0, *first1);
+        return std::move(f);
+    }
+    
+    
     // This variation is only 50% slower than d.
     template <typename I, typename J, typename T>
     auto Pearson_correlation_coefficient_f(I x1, I xn, J y1, T mean_x, T mean_y)
