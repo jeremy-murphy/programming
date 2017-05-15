@@ -248,8 +248,7 @@ namespace jwm
         for (; fx1 != fxn; fx1++, fy1++)
         {
             auto const tmp = op2(*fx1, *fy1);
-            for (int i = 0; i != three_way.size(); i++)
-                three_way[i](tmp[i]);
+            for_each(begin(three_way), end(three_way), begin(tmp), x_of_y());
         }
         auto const denom = sqrt(sum_kahan(three_way[0]) * sum_kahan(three_way[2]));
         return sum_kahan(three_way[1]) / denom;
