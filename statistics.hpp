@@ -164,6 +164,7 @@ namespace jwm
     };
     
     
+    // (T, T) -> (T, T, T)
     // (x, y) -> (x*x, x*y, y*y)
     struct three_way_product
     {
