@@ -283,6 +283,60 @@ namespace jwm
     }
     
 
+    // "foo" because I'm not sure what to call it yet.
+    template <typename AccumulationContainer>
+    struct foo
+    {
+        AccumulationContainer result;
+        three_way_product op;
+        
+        template <typename T>
+        foo(T &&result) : result{std::forward<T>(result)} {}
+        
+        template <typename T, typename U>
+        void operator()(T x, U y)
+        {
+            auto const tmp = op(x, y);
+            for_each(std::begin(result), std::end(result), std::begin(tmp), x_of_y());
+        }
+    };
+    
+    
+    template <typename AccumulationContainer>
+    foo<AccumulationContainer> make_foo(AccumulationContainer &&result)
+    {
+        return foo<AccumulationContainer>(std::forward<AccumulationContainer>(result));
+    }
+    
+    /*
+     * BM_Pearson_correlation/8              137 ns        137 ns    5101053
+     * BM_Pearson_correlation/64            1226 ns       1226 ns     571494
+     * BM_Pearson_correlation/512          10005 ns      10005 ns      71025
+     * BM_Pearson_correlation/4096         78985 ns      78986 ns       8786
+     * BM_Pearson_correlation/32768       634878 ns     634867 ns       1098
+     * BM_Pearson_correlation/262144     5224304 ns    5224179 ns        132
+     * BM_Pearson_correlation/2097152   41986322 ns   41985338 ns         17
+     * BM_Pearson_correlation/8388608  169536467 ns  169538068 ns          4
+     */
+    // This looks to be equivalent in performance to f.
+    template <typename I, typename J, typename T>
+    auto Pearson_correlation_coefficient_g(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using namespace std;
+        auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+                   fxn = fx1 + distance(x1, xn);
+        auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+        
+        using namespace boost::accumulators;
+        using kahan_accumulator = accumulator_set<T, stats<tag::sum_kahan>>;
+        std::array<kahan_accumulator, 3> three_way;
+        auto result = for_each(fx1, fxn, fy1, make_foo(three_way)).result;
+        auto const denom = sqrt(sum_kahan(result[0]) * sum_kahan(result[2]));
+        return sum_kahan(result[1]) / denom;
+    }
+    
+    
     template <typename I, typename J>
     auto Pearson_correlation_coefficient(I x1, I xn, J y1)
     {
