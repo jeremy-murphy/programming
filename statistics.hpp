@@ -201,11 +201,11 @@ namespace jwm
     
     struct x_of_y
     {
-        template <typename Functor, typename U>
-        auto operator()(Functor &&x, U &&y) const
+        template <typename Functor, typename T>
+        auto operator()(Functor &&x, T &&y) const
         {
-            x(std::forward<U>(y));
-            return x;
+            x(std::forward<T>(y));
+            return std::forward<Functor>(x);
         }
     };
     
