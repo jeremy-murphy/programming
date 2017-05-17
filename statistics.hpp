@@ -174,7 +174,17 @@ namespace jwm
         }
     };
     
-    
+    /*
+     * BM_Pearson_correlation/8               87 ns         87 ns    7448864
+     * BM_Pearson_correlation/64             864 ns        863 ns     841536
+     * BM_Pearson_correlation/512           6985 ns       6985 ns     100748
+     * BM_Pearson_correlation/4096         55691 ns      55672 ns      12673
+     * BM_Pearson_correlation/32768       412155 ns     412132 ns       1683
+     * BM_Pearson_correlation/262144     3635071 ns    3635034 ns        201
+     * BM_Pearson_correlation/2097152   29817785 ns   29815147 ns         25
+     * BM_Pearson_correlation/8388608  110969886 ns  110971045 ns          6
+     */
+    // This is the baseline algorithm.
     template <typename I, typename J, typename T>
     auto Pearson_correlation_coefficient_d(I x1, I xn, J y1, T mean_x, T mean_y)
     {
@@ -202,6 +212,16 @@ namespace jwm
     };
     
     
+    /*
+     * BM_Pearson_correlation/8              213 ns        213 ns    3289895
+     * BM_Pearson_correlation/64            1833 ns       1831 ns     383951
+     * BM_Pearson_correlation/512          14873 ns      14873 ns      47319
+     * BM_Pearson_correlation/4096        114038 ns     114042 ns       5791
+     * BM_Pearson_correlation/32768       908694 ns     908651 ns        783
+     * BM_Pearson_correlation/262144     7389450 ns    7389580 ns         94
+     * BM_Pearson_correlation/2097152   59193065 ns   59175501 ns         12
+     * BM_Pearson_correlation/8388608  234984649 ns  234989310 ns          3
+     */
     // This variation is 100% slower than d.
     template <typename I, typename J, typename T>
     auto Pearson_correlation_coefficient_e(I x1, I xn, J y1, T mean_x, T mean_y)
@@ -230,6 +250,16 @@ namespace jwm
     }
     
     
+    /*
+     * BM_Pearson_correlation/8              133 ns        133 ns    5112730
+     * BM_Pearson_correlation/64            1215 ns       1215 ns     577956
+     * BM_Pearson_correlation/512           9776 ns       9772 ns      71737
+     * BM_Pearson_correlation/4096         78133 ns      78098 ns       8726
+     * BM_Pearson_correlation/32768       624688 ns     624383 ns       1110
+     * BM_Pearson_correlation/262144     5299817 ns    5292250 ns        129
+     * BM_Pearson_correlation/2097152   44251541 ns   44182891 ns         16
+     * BM_Pearson_correlation/8388608  173088181 ns  172820258 ns          4
+     */
     // This variation is only 50% slower than d.
     template <typename I, typename J, typename T>
     auto Pearson_correlation_coefficient_f(I x1, I xn, J y1, T mean_x, T mean_y)
