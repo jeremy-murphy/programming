@@ -21,6 +21,33 @@
 
 namespace jwm
 {
+    /**
+     * BM_Pearson_correlation/8               79 ns         79 ns    8597511
+     * BM_Pearson_correlation/64             780 ns        780 ns     878902
+     * BM_Pearson_correlation/512           6566 ns       6537 ns     108931
+     * BM_Pearson_correlation/4096         51484 ns      51480 ns      13549
+     * BM_Pearson_correlation/32768       411962 ns     411976 ns       1689
+     * BM_Pearson_correlation/262144     3453352 ns    3453108 ns        202
+     * BM_Pearson_correlation/2097152   27945913 ns   27923286 ns         25
+     * BM_Pearson_correlation/8388608  111367122 ns  111167390 ns          6
+     */
+    template <typename I, typename J, typename T>
+    auto Pearson_correlation_coefficient_concrete(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using std::sqrt;
+
+        T xx{0}, xy{0}, yy{0};
+        for (; x1 != xn; x1++, y1++)
+        {
+            xx += (*x1 - mean_x) * (*x1 - mean_x);
+            xy += (*x1 - mean_x) * (*y1 - mean_y);
+            yy += (*y1 - mean_y) * (*y1 - mean_y);
+        }
+        return xy / sqrt(xx * yy);
+    }
+    
+    
     template <typename I>
     auto Euclidean_norm(I first, I last)
     {
