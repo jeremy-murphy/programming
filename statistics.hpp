@@ -191,6 +191,13 @@ namespace jwm
     };
     
     
+    template <typename BinaryOperator>
+    vector_accumulation<BinaryOperator> make_vector_accumulation(BinaryOperator &&op)
+    {
+        return vector_accumulation<BinaryOperator>(std::forward<BinaryOperator>(op));
+    }
+    
+    
     // (T, T) -> (T, T, T)
     // (x, y) -> (x*x, x*y, y*y)
     struct three_way_product
@@ -221,7 +228,7 @@ namespace jwm
         auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
                    fxn = fx1 + distance(x1, xn);
         auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
-        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, vector_accumulation<std::plus<>>(std::plus<>()), three_way_product());
+        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, make_vector_accumulation(std::plus<>()), three_way_product());
         auto const denom = sqrt(three_way[0] * three_way[2]);
         return three_way[1] / denom;
     }
