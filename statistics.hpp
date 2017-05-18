@@ -203,14 +203,14 @@ namespace jwm
     };
     
     /*
-     * BM_Pearson_correlation/8               87 ns         87 ns    7448864
-     * BM_Pearson_correlation/64             864 ns        863 ns     841536
-     * BM_Pearson_correlation/512           6985 ns       6985 ns     100748
-     * BM_Pearson_correlation/4096         55691 ns      55672 ns      12673
-     * BM_Pearson_correlation/32768       412155 ns     412132 ns       1683
-     * BM_Pearson_correlation/262144     3635071 ns    3635034 ns        201
-     * BM_Pearson_correlation/2097152   29817785 ns   29815147 ns         25
-     * BM_Pearson_correlation/8388608  110969886 ns  110971045 ns          6
+     * BM_Pearson_correlation/8               86 ns         85 ns    8067122
+     * BM_Pearson_correlation/64             835 ns        833 ns     839226
+     * BM_Pearson_correlation/512           6871 ns       6859 ns     102247
+     * BM_Pearson_correlation/4096         55074 ns      55076 ns      12683
+     * BM_Pearson_correlation/32768       415214 ns     415226 ns       1624
+     * BM_Pearson_correlation/262144     3473169 ns    3473258 ns        202
+     * BM_Pearson_correlation/2097152   28190417 ns   28187235 ns         25
+     * BM_Pearson_correlation/8388608  111119223 ns  111121497 ns          6
      */
     // This is the baseline algorithm.
     template <typename I, typename J, typename T>
