@@ -10,6 +10,8 @@
 
 #include <boost/iterator/transform_iterator.hpp>
 
+#include <eigen3/Eigen/Dense>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -200,12 +202,12 @@ namespace jwm
     
     // (T, T) -> (T, T, T)
     // (x, y) -> (x*x, x*y, y*y)
+    template <typename T, class Result=std::array<T, 3>>
     struct three_way_product
     {
-        template <typename T>
-        std::array<T, 3> operator()(T x, T y) const
+        Result operator()(T x, T y) const
         {
-            return {{x * x, x * y, y * y}};
+            return {x * x, x * y, y * y};
         }
     };
     
@@ -228,11 +230,36 @@ namespace jwm
         auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
                    fxn = fx1 + distance(x1, xn);
         auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
-        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, make_vector_accumulation(std::plus<>()), three_way_product());
+        
+        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, make_vector_accumulation(std::plus<>()), three_way_product<T>());
         auto const denom = sqrt(three_way[0] * three_way[2]);
         return three_way[1] / denom;
     }
-    
+
+    /* 
+     * BM_Pearson_correlation/8               78 ns         78 ns    8723474
+     * BM_Pearson_correlation/64             782 ns        782 ns     895837
+     * BM_Pearson_correlation/512           6406 ns       6406 ns     109118
+     * BM_Pearson_correlation/4096         51805 ns      51556 ns      13506
+     * BM_Pearson_correlation/32768       413248 ns     412728 ns       1699
+     * BM_Pearson_correlation/262144     3466678 ns    3457536 ns        203
+     * BM_Pearson_correlation/2097152   28474369 ns   28437681 ns         25
+     * BM_Pearson_correlation/8388608  112729810 ns  112651093 ns          6
+     */
+    template <typename I, typename J, typename T, typename Vector3=Eigen::Matrix<T, 3, 1>>
+    auto Pearson_correlation_coefficient_eigen(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using namespace std;
+        auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+                   fxn = fx1 + distance(x1, xn);
+        auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+        
+        auto const three_way = std::inner_product(fx1, fxn, fy1, Vector3(0, 0, 0), std::plus<>(), three_way_product<T, Vector3>());
+        auto const denom = sqrt(three_way[0] * three_way[2]);
+        return three_way[1] / denom;
+    }
+
     
     struct x_of_y
     {
@@ -263,12 +290,12 @@ namespace jwm
         using namespace std;
         auto const n = distance(x1, xn);        
         auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
-        fxn = fx1 + n;
+                   fxn = fx1 + n;
         auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
         
         using namespace boost::accumulators;
         using kahan_accumulator = accumulator_set<T, stats<tag::sum_kahan>>;
-        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<kahan_accumulator, 3>{}, vector_accumulation<x_of_y>(x_of_y()), three_way_product());
+        auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<kahan_accumulator, 3>{}, vector_accumulation<x_of_y>(x_of_y()), three_way_product<T>());
         auto const denom = sqrt(sum_kahan(three_way[0]) * sum_kahan(three_way[2]));
         return sum_kahan(three_way[1]) / denom;
     }
@@ -306,7 +333,7 @@ namespace jwm
         using namespace boost::accumulators;
         using kahan_accumulator = accumulator_set<T, stats<tag::sum_kahan>>;
         std::array<kahan_accumulator, 3> three_way;
-        three_way_product op2;
+        three_way_product<T> op2;
         for (; fx1 != fxn; fx1++, fy1++)
         {
             auto const tmp = op2(*fx1, *fy1);
@@ -322,7 +349,7 @@ namespace jwm
     struct foo
     {
         AccumulationContainer result;
-        three_way_product op;
+        three_way_product<typename AccumulationContainer::value_type> op;
         
         template <typename T>
         foo(T &&result) : result{std::forward<T>(result)} {}
@@ -365,7 +392,7 @@ namespace jwm
         using namespace boost::accumulators;
         using kahan_accumulator = accumulator_set<T, stats<tag::sum_kahan>>;
         std::array<kahan_accumulator, 3> three_way;
-        auto result = for_each(fx1, fxn, fy1, make_foo(three_way)).result;
+        auto const result = for_each(fx1, fxn, fy1, make_foo(three_way)).result;
         auto const denom = sqrt(sum_kahan(result[0]) * sum_kahan(result[2]));
         return sum_kahan(result[1]) / denom;
     }
@@ -386,7 +413,7 @@ namespace jwm
         }; // or Boost accumulator
         auto const mean_x = f(x1, xn), 
                    mean_y = f(y1, y1 + n);
-        return Pearson_correlation_coefficient_f(x1, xn, y1, mean_x, mean_y);
+        return Pearson_correlation_coefficient_eigen(x1, xn, y1, mean_x, mean_y);
     }    
 }
 
