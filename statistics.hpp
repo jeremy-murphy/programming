@@ -10,7 +10,8 @@
 
 #include <boost/iterator/transform_iterator.hpp>
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
+
 
 #include <algorithm>
 #include <array>
@@ -49,6 +50,35 @@ namespace jwm
         return xy / sqrt(xx * yy);
     }
     
+    /*
+     * BM_Pearson_correlation/8             1078 ns       1055 ns     627524
+     * BM_Pearson_correlation/64            2609 ns       2560 ns     262386
+     * BM_Pearson_correlation/512          14256 ns      14009 ns      46700
+     * BM_Pearson_correlation/4096        108848 ns     107231 ns       6542
+     * BM_Pearson_correlation/32768       847712 ns     844315 ns        827
+     * BM_Pearson_correlation/262144     6778388 ns    6713787 ns        102
+     * BM_Pearson_correlation/2097152   52658159 ns   52426379 ns         13
+     * BM_Pearson_correlation/8388608  209469991 ns  201800136 ns          3
+     */
+    //  2 x slower than the concrete base case!
+    template <typename I, typename J, typename T>
+    auto Pearson_correlation_coefficient_concrete_p(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using std::sqrt;
+        
+        T xx{0}, xy{0}, yy{0};
+        auto const n = xn - x1;
+#pragma omp parallel for
+        for (std::ptrdiff_t i = 0; i < n; ++i)
+        {
+            xx += (*x1 - mean_x) * (*x1 - mean_x);
+            xy += (*x1 - mean_x) * (*y1 - mean_y);
+            yy += (*y1 - mean_y) * (*y1 - mean_y);
+            x1++, y1++;
+        }
+        return xy / sqrt(xx * yy);
+    }
     
     template <typename I>
     auto Euclidean_norm(I first, I last)
