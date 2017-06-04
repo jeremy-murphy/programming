@@ -13,8 +13,7 @@ if (GTEST_FOUND)
     target_link_libraries(test_find ${GTEST_BOTH_LIBRARIES})
     add_test(find test_find)
 
-    add_executable(test_statistics test_statistics.cpp)
-    target_link_libraries(test_statistics ${GTEST_BOTH_LIBRARIES})
+    add_hpx_executable(test_statistics ESSENTIAL SOURCES test_statistics.cpp DEPENDENCIES ${GTEST_BOTH_LIBRARIES})
     add_test(statistics test_statistics)
     
 endif()

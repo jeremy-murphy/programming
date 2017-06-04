@@ -1,3 +1,5 @@
+#include <hpx/hpx_main.hpp>
+
 #include "../statistics.hpp"
 
 #include <gtest/gtest.h>
@@ -7,6 +9,7 @@
 using namespace jwm;
 using namespace std;
 
+namespace {
 
 TEST(Pearson_correlation_coefficient, NaN)
 {
@@ -39,4 +42,19 @@ TEST(Pearson_correlation_coefficient, StatisticsHowTo)
     
     auto r = Pearson_correlation_coefficient(begin(x), end(x), begin(y));
     ASSERT_FLOAT_EQ(0.529809, r);
+}
+
+}
+
+
+int hpx_main(int argc, char **argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    auto result = RUN_ALL_TESTS();
+    return hpx::finalize(result);
+}
+
+int main(int argc, char **argv)
+{
+    return hpx::init(argc, argv);
 }

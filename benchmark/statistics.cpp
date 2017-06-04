@@ -1,3 +1,5 @@
+#include <hpx/hpx_main.hpp>
+
 #include <benchmark/benchmark.h>
 
 #include "../statistics.hpp"

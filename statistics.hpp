@@ -1,6 +1,8 @@
 #ifndef JWM_STATISTICS
 #define JWM_STATISTICS
 
+#include <hpx/include/parallel_numeric.hpp>
+
 #include "functional.hpp"
 
 #include <boost/accumulators/accumulators.hpp>
@@ -11,7 +13,6 @@
 #include <boost/iterator/transform_iterator.hpp>
 
 #include <Eigen/Dense>
-
 
 #include <algorithm>
 #include <array>
@@ -424,6 +425,20 @@ namespace jwm
     }
     
     
+    template <typename I, typename J, typename T, typename Vector3=Eigen::Matrix<T, 3, 1>>
+    auto Pearson_correlation_coefficient_eigen_p(I x1, I xn, J y1, T mean_x, T mean_y)
+    {
+        assert(x1 != xn);
+        using namespace std;
+        auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+        fxn = fx1 + distance(x1, xn);
+        auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+        
+        auto const three_way = hpx::parallel::transform_reduce(hpx::parallel::execution::par, fx1, fxn, fy1, Vector3(0, 0, 0), std::plus<>(), three_way_product<T, Vector3>());
+        return three_way[1] / sqrt(three_way[0] * three_way[2]);
+    }
+    
+    
     template <typename I, typename J>
     auto Pearson_correlation_coefficient(I x1, I xn, J y1)
     {
@@ -439,7 +454,7 @@ namespace jwm
         }; // or Boost accumulator
         auto const mean_x = f(x1, xn), 
                    mean_y = f(y1, y1 + n);
-        return Pearson_correlation_coefficient_eigen(x1, xn, y1, mean_x, mean_y);
+        return Pearson_correlation_coefficient_eigen_p(x1, xn, y1, mean_x, mean_y);
     }    
 }
 
