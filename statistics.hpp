@@ -190,16 +190,14 @@ namespace jwm
     {
         assert(x1 != xn);
         using namespace std;
-        auto const n = distance(x1, xn);
         
-        auto fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
-             fxn = fx1 + n;
-        auto fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
+        auto const fx1 = boost::make_transform_iterator(x1, bind2nd(minus<>(), mean_x)),
+                   fxn = fx1 + distance(x1, xn);
+        auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
         
         T numer, x_ss, y_ss;
         std::tie(numer, x_ss, y_ss) = three_way_inner_product(fx1, fxn, fy1, T(0), T(0), T(0));
-        auto const denom = sqrt(x_ss * y_ss);
-        return numer / denom;
+        return numer / sqrt(x_ss * y_ss);
     }
     
     
@@ -262,8 +260,7 @@ namespace jwm
         auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
         
         auto const three_way = std::inner_product(fx1, fxn, fy1, std::array<T, 3>{}, make_vector_accumulation(std::plus<>()), three_way_product<T>());
-        auto const denom = sqrt(three_way[0] * three_way[2]);
-        return three_way[1] / denom;
+        return three_way[1] / sqrt(three_way[0] * three_way[2]);
     }
 
     /* 
@@ -286,8 +283,7 @@ namespace jwm
         auto const fy1 = boost::make_transform_iterator(y1, bind2nd(minus<>(), mean_y));
         
         auto const three_way = std::inner_product(fx1, fxn, fy1, Vector3(0, 0, 0), std::plus<>(), three_way_product<T, Vector3>());
-        auto const denom = sqrt(three_way[0] * three_way[2]);
-        return three_way[1] / denom;
+        return three_way[1] / sqrt(three_way[0] * three_way[2]);
     }
 
     
