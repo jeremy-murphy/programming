@@ -1,4 +1,4 @@
-#include "../statistics.hpp"
+#include "../Pearson_correlation_coefficient.hpp"
 
 #include <gtest/gtest.h>
 

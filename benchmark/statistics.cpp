@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include "../statistics.hpp"
+#include "../Pearson_correlation_coefficient.hpp"
 
 static void BM_Pearson_correlation(benchmark::State &s)
 {
