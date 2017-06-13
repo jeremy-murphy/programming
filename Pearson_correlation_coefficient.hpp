@@ -49,6 +49,74 @@ namespace jwm
         }
         return xy / sqrt(xx * yy);
     }
+
+    /**
+     * BM_Pearson_correlation/8               22 ns         22 ns   31160632
+     * BM_Pearson_correlation/64             110 ns        110 ns    6334243
+     * BM_Pearson_correlation/512            810 ns        809 ns     863173
+     * BM_Pearson_correlation/4096          6369 ns       6369 ns     109323
+     * BM_Pearson_correlation/32768        51416 ns      51327 ns      13529
+     * BM_Pearson_correlation/262144      484997 ns     485007 ns       1424
+     * BM_Pearson_correlation/2097152    3976323 ns    3975979 ns        174
+     * BM_Pearson_correlation/8388608   15962961 ns   15959515 ns         44
+     */
+    template <typename I, typename J>
+    auto Pearson_correlation_coefficient_concrete_one_pass_naive(I x1, I xn, J y1)
+    {
+        assert(x1 != xn);
+        using std::sqrt;
+        
+        using T = typename std::iterator_traits<I>::value_type;
+        
+        auto const n = std::distance(x1, xn);
+        T mean_x{0}, mean_y{0}, xy{0}, xx{0}, yy{0};
+        for (; x1 != xn; x1++, y1++)
+        {
+            xy += *x1 * *y1;
+            xx += *x1 * *x1;
+            yy += *y1 * *y1;
+            mean_x += *x1;
+            mean_y += *y1;
+        }
+        mean_x /= n;
+        mean_y /= n;
+        return (xy - n * mean_x * mean_y) / sqrt((xx - n * mean_x * mean_x) * 
+                                                 (yy - n * mean_y * mean_y));
+    }
+    
+    /**
+     * BM_Pearson_correlation/8              134 ns        126 ns    5740335
+     * BM_Pearson_correlation/64             583 ns        583 ns    1093192
+     * BM_Pearson_correlation/512           4150 ns       4150 ns     164169
+     * BM_Pearson_correlation/4096         32987 ns      32988 ns      20985
+     * BM_Pearson_correlation/32768       265143 ns     265154 ns       2540
+     * BM_Pearson_correlation/262144     2220244 ns    2220315 ns        302
+     * BM_Pearson_correlation/2097152   19465385 ns   19466058 ns         37
+     * BM_Pearson_correlation/8388608   76048524 ns   76051980 ns          9
+     */
+    template <typename I, typename J>
+    auto Pearson_correlation_coefficient_concrete_one_pass_Kahan(I x1, I xn, J y1)
+    {
+        assert(x1 != xn);
+        using std::sqrt;
+        using namespace boost::accumulators;
+        
+        using T = typename std::iterator_traits<I>::value_type;
+        
+        auto const n = std::distance(x1, xn);
+        accumulator_set<T, stats<tag::mean>> x, y;
+        accumulator_set<T, stats<tag::sum_kahan>> xy, xx, yy;
+        for (; x1 != xn; x1++, y1++)
+        {
+            xy(*x1 * *y1);
+            xx(*x1 * *x1);
+            yy(*y1 * *y1);
+            x(*x1);
+            y(*y1);
+        }
+        return (sum_kahan(xy) - n * mean(x) * mean(y)) / sqrt((sum_kahan(xx) - n * mean(x) * mean(x)) * 
+        (sum_kahan(yy) - n * mean(y) * mean(y)));
+    }
     
     /*
      * BM_Pearson_correlation/8             1078 ns       1055 ns     627524
