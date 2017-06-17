@@ -80,8 +80,9 @@ namespace jwm
         }
         mean_x /= n;
         mean_y /= n;
-        return (xy - n * mean_x * mean_y) / sqrt((xx - n * mean_x * mean_x) * 
-                                                 (yy - n * mean_y * mean_y));
+        auto const Pcc = (xy - n * mean_x * mean_y) / sqrt((xx - n * mean_x * mean_x) * 
+        (yy - n * mean_y * mean_y));
+        return std::make_tuple(Pcc, mean_x, mean_y);
     }
     
     /**
@@ -114,8 +115,8 @@ namespace jwm
             x(*x1);
             y(*y1);
         }
-        return (sum_kahan(xy) - n * mean(x) * mean(y)) / sqrt((sum_kahan(xx) - n * mean(x) * mean(x)) * 
-        (sum_kahan(yy) - n * mean(y) * mean(y)));
+        auto const Pcc = (sum_kahan(xy) - n * mean(x) * mean(y)) / sqrt((sum_kahan(xx) - n * mean(x) * mean(x)) * (sum_kahan(yy) - n * mean(y) * mean(y)));
+        return std::make_tuple(Pcc, mean(x), mean(y));
     }
     
     /*
@@ -507,7 +508,8 @@ namespace jwm
         }; // or Boost accumulator
         auto const mean_x = f(x1, xn), 
                    mean_y = f(y1, y1 + n);
-        return Pearson_correlation_coefficient_eigen(x1, xn, y1, mean_x, mean_y);
+        auto const Pcc = Pearson_correlation_coefficient_eigen(x1, xn, y1, mean_x, mean_y);
+        return std::make_tuple(Pcc, mean_x, mean_y);
     }    
 }
 
