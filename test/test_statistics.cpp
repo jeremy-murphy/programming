@@ -38,5 +38,5 @@ TEST(Pearson_correlation_coefficient, StatisticsHowTo)
                          y = {99, 65, 79, 75, 87, 81};
     
     auto r = Pearson_correlation_coefficient_concrete_one_pass_Kahan(begin(x), end(x), begin(y));
-    ASSERT_DOUBLE_EQ(0.529809, get<0>(r));
+    ASSERT_NEAR(0.529809, get<0>(r), 0.000001);
 }
