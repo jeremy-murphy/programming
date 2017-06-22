@@ -161,17 +161,19 @@ namespace jwm
         return sqrt(std::inner_product(std::next(first), last, *first));
     }
 
+
+    template <typename Iterator0, typename Iterator1, typename CommutativeBinaryFunction, typename AssociativeBinaryFunction>
+    auto inner_product_nonempty(Iterator0 first0, Iterator0 last0, Iterator1 first1, CommutativeBinaryFunction f0, AssociativeBinaryFunction f1)
+    {
+        assert(first0 != last0);
+        return std::inner_product(std::next(first0), last0, std::next(first1), f1(*first0, *first1), f0, f1);
+    }
+    
     
     template <typename Iterator0, typename Iterator1>
     auto inner_product_nonempty(Iterator0 f0, Iterator0 l0, Iterator1 f1)
     {
-        // return std::inner_product(std::next(f0), l0, std::next(f1), *f0 * *f1);
-        using namespace boost::accumulators;
-        using T = typename std::iterator_traits<Iterator0>::value_type;
-        accumulator_set<T, stats<tag::sum_kahan>> acc;
-        for (; f0 != l0; ++f0, ++f1)
-            acc(*f0 * *f1);
-        return sum_kahan(acc);
+        return std::inner_product(std::next(f0), l0, std::next(f1), *f0 * *f1);
     }
     
     
