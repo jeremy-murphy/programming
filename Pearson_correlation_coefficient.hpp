@@ -23,7 +23,7 @@
 #include <tuple>
 
 namespace jwm
-{
+{    
     /**
      * BM_Pearson_correlation/8               79 ns         79 ns    8597511
      * BM_Pearson_correlation/64             780 ns        780 ns     878902
@@ -34,6 +34,10 @@ namespace jwm
      * BM_Pearson_correlation/2097152   27945913 ns   27923286 ns         25
      * BM_Pearson_correlation/8388608  111367122 ns  111167390 ns          6
      */
+    // This is the base concrete implementation.
+    // * naive summation
+    // * single threaded
+    // * no abstraction
     template <typename I, typename J, typename T>
     auto Pearson_correlation_coefficient_concrete(I x1, I xn, J y1, T mean_x, T mean_y)
     {
@@ -510,7 +514,7 @@ namespace jwm
         }; // or Boost accumulator
         auto const mean_x = f(x1, xn), 
                    mean_y = f(y1, y1 + n);
-        auto const Pcc = Pearson_correlation_coefficient_eigen(x1, xn, y1, mean_x, mean_y);
+        auto const Pcc = Pearson_correlation_coefficient_d(x1, xn, y1, mean_x, mean_y);
         return std::make_tuple(Pcc, mean_x, mean_y);
     }    
 }
